@@ -1,0 +1,7 @@
+# Copy to terraform.tfvars and adjust. terraform.tfvars is git-ignored.
+
+region             = "ap-northeast-2"
+environment        = "dev"
+cluster_name       = "eks-gitops-dev"
+kubernetes_version = "1.30"
+vpc_cidr           = "10.0.0.0/16"
