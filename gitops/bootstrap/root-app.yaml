@@ -1,0 +1,28 @@
+# App-of-apps root Application.
+#
+# Apply this once after installing ArgoCD. It makes ArgoCD manage every child
+# Application under gitops/apps/, so all further changes flow through Git.
+#
+# NOTE: update `repoURL` to your fork before applying.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/GWANG-MIN1/eks-gitops-platform.git
+    targetRevision: main
+    path: gitops/apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
