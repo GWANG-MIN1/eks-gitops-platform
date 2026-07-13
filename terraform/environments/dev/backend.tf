@@ -1,15 +1,17 @@
-# Remote state backend.
+# Remote state backend (S3 + DynamoDB lock).
 #
-# The bucket and lock table must exist before `terraform init`. Create them once,
-# out of band (a small bootstrap script will be added in Phase 1), then fill in the
-# values below. Kept as a template so no account-specific names are committed.
+# The bucket and lock table are created once by terraform/bootstrap/. Their names
+# are account-specific, so they're supplied at init time via a backend-config file
+# instead of being committed here:
+#
+#   terraform init -backend-config=backend.hcl
+#
+# See backend.hcl.example. backend.hcl itself is git-ignored.
 
 terraform {
   backend "s3" {
-    # bucket         = "eks-gitops-tfstate-<your-suffix>"
-    # key            = "dev/terraform.tfstate"
-    # region         = "ap-northeast-2"
-    # dynamodb_table = "eks-gitops-tfstate-lock"
-    # encrypt        = true
+    key     = "dev/terraform.tfstate"
+    encrypt = true
+    # bucket, region, dynamodb_table -> backend.hcl
   }
 }

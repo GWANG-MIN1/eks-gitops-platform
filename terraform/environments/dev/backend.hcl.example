@@ -1,0 +1,8 @@
+# Copy to backend.hcl and fill in with the outputs from terraform/bootstrap.
+# backend.hcl is git-ignored (account-specific names).
+#
+#   terraform init -backend-config=backend.hcl
+
+bucket         = "eks-gitops-tfstate-<account-id>"
+region         = "ap-northeast-2"
+dynamodb_table = "eks-gitops-tfstate-lock"

@@ -8,6 +8,7 @@ including* the EKS cluster; in-cluster workloads are handled by GitOps (see
 
 ```
 terraform/
+├── bootstrap/        # one-time: S3 + DynamoDB for remote state
 ├── environments/
 │   └── dev/          # root module you actually run `terraform` in
 └── modules/
@@ -20,20 +21,33 @@ terraform/
 
 ## Usage
 
+First, once per account, create the remote-state backend:
+
 ```bash
-cd environments/dev
+cd bootstrap
+terraform init && terraform apply
+terraform output                # -> bucket + lock table names
+```
+
+Then the dev environment:
+
+```bash
+cd ../environments/dev
+cp backend.hcl.example backend.hcl             # fill in the bootstrap outputs
 cp terraform.tfvars.example terraform.tfvars   # then edit values
-terraform init
+terraform init -backend-config=backend.hcl
 terraform plan
 terraform apply
-# ...learn, then:
+aws eks update-kubeconfig --region ap-northeast-2 --name eks-gitops-dev
+# ...learn, then (do this when you're done for the day!):
 terraform destroy
 ```
 
 ## Conventions
 
-- **Remote state** lives in S3 with a DynamoDB lock table (see `backend.tf`). The
-  bucket/table are created once, out of band, before the first `init`.
+- **Remote state** lives in S3 with a DynamoDB lock table. The bucket/table are
+  created once by [`bootstrap/`](bootstrap); names are passed to `init` via a
+  git-ignored `backend.hcl` (see `backend.hcl.example`).
 - **No secrets in state files or tfvars.** `*.tfvars` is git-ignored; only
   `*.tfvars.example` is committed.
 - Run `terraform fmt -recursive` before committing — CI enforces it.
