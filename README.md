@@ -62,7 +62,7 @@ flowchart LR
 
 | 단계 | 내용 | 상태 |
 |------|------|------|
-| 1 | Terraform 기반 구성 — VPC, EKS, remote state | 🚧 진행 중 |
+| 1 | Terraform 기반 구성 — VPC, EKS, remote state | ✅ 코드·CI 완료 (apply 검증 전) |
 | 2 | GitOps — ArgoCD bootstrap + 샘플 앱 | ⬜ 예정 |
 | 3 | Observability — Prometheus, Grafana, Loki | ⬜ 예정 |
 | 4 | DevSecOps — Trivy, Kyverno, kube-bench | ⬜ 예정 |
@@ -74,9 +74,14 @@ flowchart LR
 > 아래는 의도한 워크플로우입니다. 각 단계가 구현되면서 채워집니다.
 
 ```bash
+# 0. remote state 백엔드 1회 생성 (S3 + DynamoDB)
+cd terraform/bootstrap
+terraform init && terraform apply
+
 # 1. 기반 인프라 프로비저닝 (Phase 1)
-cd terraform/environments/dev
-terraform init
+cd ../environments/dev
+cp backend.hcl.example backend.hcl        # bootstrap output으로 채우기
+terraform init -backend-config=backend.hcl
 terraform plan
 
 # 2. GitOps 부트스트랩 (Phase 2)
