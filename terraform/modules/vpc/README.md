@@ -19,4 +19,6 @@ discovery.
 | `private_subnet_ids` | Private subnet IDs (EKS nodes) |
 | `public_subnet_ids` | Public subnet IDs (load balancers) |
 
-> Status: interface defined; resources land in Phase 1.
+Built on [`terraform-aws-modules/vpc/aws`](https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws) (pinned `~> 5.13`). Subnet CIDRs are derived from `vpc_cidr` (`/20` private, `/24` public per AZ).
+
+> Status: implemented (Phase 1). Validated with `terraform validate`; not yet apply-tested against a live account.
