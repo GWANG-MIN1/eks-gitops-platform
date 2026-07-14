@@ -1,0 +1,27 @@
+# Child Application: sample-app.
+#
+# The root app-of-apps (../bootstrap/root-app.yaml) points at this directory, so
+# committing this file is what makes ArgoCD start managing the workload. It in
+# turn points at gitops/apps/sample-app/, where the actual manifests live.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sample-app
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/GWANG-MIN1/eks-gitops-platform.git
+    targetRevision: main
+    path: gitops/apps/sample-app
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: sample-app
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
