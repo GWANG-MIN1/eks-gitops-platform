@@ -50,8 +50,8 @@ flowchart LR
 │   ├── environments/   # dev / (staging) / (prod) 루트 모듈
 │   └── modules/        # 재사용 가능한 vpc / eks 모듈
 ├── gitops/             # ArgoCD app-of-apps — 클러스터 desired state
-│   ├── bootstrap/      # 나머지 전체를 관리하는 root Application
-│   └── apps/           # 워크로드별 Application
+│   ├── bootstrap/      # ArgoCD 설치(pinned) + 전체를 관리하는 root Application
+│   └── apps/           # 워크로드별 Application (sample-app 등)
 ├── observability/      # Prometheus, Grafana, Loki 설정
 ├── security/           # DevSecOps: 스캔, 정책, 벤치마크
 ├── docs/               # 아키텍처 & 로드맵
@@ -63,7 +63,7 @@ flowchart LR
 | 단계 | 내용 | 상태 |
 |------|------|------|
 | 1 | Terraform 기반 구성 — VPC, EKS, remote state | ✅ 코드·CI 완료 (apply 검증 전) |
-| 2 | GitOps — ArgoCD bootstrap + 샘플 앱 | ⬜ 예정 |
+| 2 | GitOps — ArgoCD bootstrap + 샘플 앱 | ✅ 코드 완료 (sync 검증 전) |
 | 3 | Observability — Prometheus, Grafana, Loki | ⬜ 예정 |
 | 4 | DevSecOps — Trivy, Kyverno, kube-bench | ⬜ 예정 |
 
@@ -85,7 +85,8 @@ terraform init -backend-config=backend.hcl
 terraform plan
 
 # 2. GitOps 부트스트랩 (Phase 2)
-kubectl apply -f gitops/bootstrap/root-app.yaml
+kubectl apply -k gitops/bootstrap/argocd        # ArgoCD 설치 (1회)
+kubectl apply -f gitops/bootstrap/root-app.yaml # app-of-apps root
 ```
 
 > 💸 **비용 주의:** EKS 컨트롤 플레인과 노드는 공짜가 아닙니다. 이 프로젝트는 배우려고

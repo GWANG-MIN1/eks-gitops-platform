@@ -18,14 +18,19 @@
 > 비용 때문에 필요할 때만 — 매일 destroy 원칙에 따라 계정에서 별도로 확인한다.
 > (체크박스는 "코드+검증(fmt/validate) 완료"를 뜻하며, apply-tested를 뜻하지 않는다.)
 
-## Phase 2 — ArgoCD 기반 GitOps ⬜
+## Phase 2 — ArgoCD 기반 GitOps ✅ (코드 완료 · 클러스터 sync 검증 전)
 
 목표: 클러스터 상태를 Git에 선언하고 자동으로 반영한다.
 
-- [ ] ArgoCD 설치 (bootstrap manifest)
-- [ ] app-of-apps root Application
-- [ ] GitOps로 샘플 워크로드 배포
-- [ ] push → sync 흐름 문서화
+- [x] ArgoCD 설치 (bootstrap manifest) — `gitops/bootstrap/argocd/` (kustomize, v2.13.4 고정)
+- [x] app-of-apps root Application — `gitops/bootstrap/root-app.yaml`
+- [x] GitOps로 샘플 워크로드 배포 — `gitops/apps/sample-app`
+- [x] push → sync 흐름 문서화 — `gitops/README.md`
+
+> 매니페스트는 검증 완료(`kubectl kustomize`로 ArgoCD install 빌드 성공, 전 YAML 파싱
+> OK). 실제 클러스터에 apply해서 ArgoCD가 Synced/Healthy로 수렴하는지는 Phase 1과
+> 함께 계정에서 한 번에 검증한다. (체크박스 = "매니페스트/구조 검증 완료", not
+> live-synced.)
 
 ## Phase 3 — Observability ⬜
 
