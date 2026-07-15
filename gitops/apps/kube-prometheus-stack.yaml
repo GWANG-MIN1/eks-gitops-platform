@@ -20,6 +20,9 @@ spec:
         releaseName: kube-prometheus-stack
         valueFiles:
           - $values/observability/kube-prometheus-stack/values.yaml
+          # Platform alerts live in their own file — stack tuning and "what counts
+          # as a problem" are separate concerns. Helm merges them in order.
+          - $values/observability/kube-prometheus-stack/alerts.yaml
     - repoURL: https://github.com/GWANG-MIN1/eks-gitops-platform.git
       targetRevision: main
       ref: values

@@ -1,0 +1,64 @@
+# Platform alerts — the "meaningful few".
+#
+# Merged into the release as a second values file (see
+# gitops/apps/kube-prometheus-stack.yaml), kept separate from values.yaml because
+# "how the stack is tuned" and "what we consider a problem" are different
+# conversations.
+#
+# Deliberately short. kube-prometheus-stack already ships the kubernetes-mixin
+# rules — crash-looping pods, node pressure, failing jobs, full volumes — and
+# restating those here would add noise, not signal. What the upstream rules
+# cannot know is what *this* platform promises: that Git and the cluster agree,
+# and that the delivery path actually delivers. That's what's below.
+#
+# Note: the {{ $labels.x }} bits are Prometheus templating, not Helm — the chart
+# passes this through with toYaml, so they reach Alertmanager intact.
+
+additionalPrometheusRulesMap:
+  platform-rules:
+    groups:
+      - name: platform.gitops
+        rules:
+          # The whole point of GitOps is that Git *is* the cluster state. When
+          # that stops being true, everything downstream (rollback, audit,
+          # reproducibility) quietly stops being true too.
+          - alert: ArgoCDAppNotSynced
+            expr: argocd_app_info{sync_status!="Synced"} == 1
+            for: 15m
+            labels:
+              severity: warning
+            annotations:
+              summary: "ArgoCD app {{ $labels.name }} has been out of sync for 15m"
+              description: >-
+                Git and the cluster disagree: either a sync is failing, or something
+                was changed by hand and selfHeal can't reconcile it.
+                Check `kubectl -n argocd get application {{ $labels.name }}`.
+
+          # Synced but broken: ArgoCD applied exactly what Git said, and what Git
+          # said doesn't run. That's a bad deploy, not a drift problem.
+          - alert: ArgoCDAppUnhealthy
+            expr: argocd_app_info{health_status!="Healthy"} == 1
+            for: 15m
+            labels:
+              severity: warning
+            annotations:
+              summary: "ArgoCD app {{ $labels.name }} is {{ $labels.health_status }}"
+              description: >-
+                The desired state synced but the workload is not healthy — pods
+                failing to start, probes red, or resources stuck progressing.
+
+      - name: platform.workloads
+        rules:
+          # sample-app is the canary for the entire delivery path. If it's down,
+          # either GitOps shipped something broken or the nodes are gone — both
+          # are worth waking up for on this platform.
+          - alert: SampleAppDown
+            expr: kube_deployment_status_replicas_available{namespace="sample-app", deployment="sample-app"} == 0
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "sample-app has no available replicas"
+              description: >-
+                The demo workload has been fully unavailable for 5m. Check the pods
+                in the sample-app namespace and the sample-app ArgoCD Application.
