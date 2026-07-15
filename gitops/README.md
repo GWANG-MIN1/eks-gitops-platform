@@ -10,17 +10,28 @@ gitops/
 ├── bootstrap/
 │   ├── argocd/           # pinned ArgoCD install (kustomize) — applied by hand once
 │   └── root-app.yaml     # the one Application you apply by hand
-└── apps/                 # child Applications, each owning one concern
-    ├── sample-app.yaml   # (Phase 2) demo workload — proves the loop ✅
-    ├── sample-app/       #           its manifests (deployment, service)
-    ├── observability/    # (Phase 3) prometheus / grafana / loki
-    └── security/         # (Phase 4) kyverno policies, etc.
+└── apps/                          # child Applications, each owning one concern
+    ├── sample-app.yaml            # (Phase 2) demo workload — proves the loop ✅
+    ├── sample-app/                #           its manifests (deployment, service)
+    ├── kube-prometheus-stack.yaml # (Phase 3) metrics, dashboards, alerts ✅
+    ├── loki.yaml                  # (Phase 3) log storage ✅
+    ├── promtail.yaml              # (Phase 3) log collection ✅
+    └── security/                  # (Phase 4) kyverno policies, etc.
 ```
 
 `root-app.yaml` is the only Application applied manually. It points ArgoCD at `apps/`
 (non-recursive), so each `*.yaml` there is a child Application ArgoCD then manages
 automatically. Add a workload by committing a new Application manifest — not by
 running `kubectl`.
+
+Applications come in two shapes:
+
+- **Plain manifests** (`sample-app`) — the Application points at a directory in
+  this repo.
+- **Upstream Helm chart + our values** (the Phase 3 stack) — a multi-source
+  Application pulls a pinned chart from its Helm repo and the values from this
+  repo (`$values/...`, see [`../observability`](../observability)). A 6000-line
+  chart stays out of Git; the overrides stay reviewable.
 
 ## Bootstrap (Phase 2)
 

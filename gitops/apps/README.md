@@ -9,8 +9,13 @@ Children:
 
 - `sample-app.yaml` → `sample-app/` — a small demo workload proving the GitOps loop
   end to end (Phase 2) ✅
-- `observability/` — kube-prometheus-stack + Loki (Phase 3) ⬜
+- `kube-prometheus-stack.yaml` — Prometheus, Grafana, Alertmanager + platform
+  alerts (Phase 3) ✅
+- `loki.yaml` / `promtail.yaml` — log storage and collection (Phase 3) ✅
 - `security/` — Kyverno policies and related guardrails (Phase 4) ⬜
+
+The Phase 3 Applications are multi-source: chart from the upstream Helm repo,
+values from `../../observability/` in this repo.
 
 Each is added as its phase lands, so this directory stays in sync with what the
 cluster actually runs.

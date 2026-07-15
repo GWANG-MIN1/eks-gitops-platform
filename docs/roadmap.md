@@ -32,13 +32,21 @@
 > 함께 계정에서 한 번에 검증한다. (체크박스 = "매니페스트/구조 검증 완료", not
 > live-synced.)
 
-## Phase 3 — Observability ⬜
+## Phase 3 — Observability ✅ (코드 완료 · 클러스터 검증 전)
 
 목표: 메트릭, 대시보드, 로그를 수동 설정 없이 바로 볼 수 있게 한다.
 
-- [ ] kube-prometheus-stack (Prometheus + Grafana + Alertmanager)
-- [ ] 로그 집계용 Loki
-- [ ] 기본 대시보드와 의미 있는 알림 몇 개
+- [x] kube-prometheus-stack (Prometheus + Grafana + Alertmanager) — `observability/kube-prometheus-stack/` (차트 87.16.1 고정)
+- [x] 로그 집계용 Loki — `observability/loki/` (SingleBinary) + `observability/promtail/`, Grafana 데이터소스로 연결
+- [x] 기본 대시보드와 의미 있는 알림 몇 개 — 기본 대시보드는 차트 제공, 알림은 `observability/kube-prometheus-stack/alerts.yaml` (ArgoCD 드리프트/헬스, sample-app down)
+
+> 전부 GitOps로 배포된다 (`gitops/apps/`의 multi-source Application = 업스트림 차트 +
+> 이 레포의 values). 차트 values 스키마는 실제 차트를 받아 키 존재를 검증했고, YAML은
+> 전부 파싱 OK. 실제 클러스터에서 sync/scrape 되는지는 Phase 1·2와 함께 검증한다.
+>
+> 의도적으로 정한 것: **EKS 컨트롤플레인(etcd/scheduler/controller-manager)은 스크레이프
+> 불가라 비활성화**(안 그러면 영구 red + 무의미한 알림), **PVC 없음**(EBS CSI 드라이버
+> 미설치 → PVC는 Pending에서 멈춤, 게다가 매일 destroy). 영속화는 별도 작업.
 
 ## Phase 4 — DevSecOps ⬜
 
