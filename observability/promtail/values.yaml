@@ -1,0 +1,21 @@
+# promtail values — the log collector.
+#
+# Runs as a DaemonSet, tails every container's stdout/stderr on the node and
+# ships it to Loki with Kubernetes labels attached (namespace, pod, container),
+# which is what makes logs queryable next to metrics in Grafana.
+#
+# The chart's scrape config already discovers pods and relabels them sensibly,
+# so the only thing that genuinely has to change is where to push.
+
+config:
+  clients:
+    # The chart default points at loki-gateway; we run SingleBinary with the
+    # gateway disabled, so talk to the Loki service directly.
+    - url: http://loki.observability.svc.cluster.local:3100/loki/api/v1/push
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 64Mi
+  limits:
+    memory: 128Mi

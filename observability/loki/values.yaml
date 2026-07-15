@@ -1,0 +1,73 @@
+# Loki values — single-binary, filesystem-backed. The smallest thing that
+# actually aggregates logs.
+#
+# Why not the chart default (SimpleScalable)? It splits Loki into read/write/
+# backend and *requires* object storage. That's the right answer at ~1TB/day and
+# absurd on two t3.medium nodes. SingleBinary is the documented small-install
+# mode; everything below is either "turn on SingleBinary" or "turn off the
+# scale-out machinery that comes with the default".
+
+deploymentMode: SingleBinary
+
+loki:
+  # No multi-tenancy: one cluster, one tenant, no X-Scope-OrgID plumbing.
+  auth_enabled: false
+
+  commonConfig:
+    # One replica of everything — there's nothing to replicate to.
+    replication_factor: 1
+
+  storage:
+    type: filesystem
+
+  # Chart v6 will not start without an explicit schema. tsdb + v13 is the
+  # current recommended pairing.
+  schemaConfig:
+    configs:
+      - from: "2024-04-01"
+        store: tsdb
+        object_store: filesystem
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+
+singleBinary:
+  replicas: 1
+
+  # No PVC. The EBS CSI driver isn't installed on this cluster, so a PVC would
+  # sit Pending forever and Loki would never start. Logs live in the pod and die
+  # with it — same deal as the metrics, and fine for a cluster destroyed daily.
+  # Making logs durable means: EBS CSI addon (or S3 + IRSA) — a real decision,
+  # not a checkbox.
+  persistence:
+    enabled: false
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+
+# --- scale-out components: not used in SingleBinary mode ---
+write:
+  replicas: 0
+read:
+  replicas: 0
+backend:
+  replicas: 0
+
+# --- extras that only earn their keep at scale (or cost money) ---
+gateway:
+  enabled: false
+chunksCache:
+  enabled: false
+resultsCache:
+  enabled: false
+minio:
+  enabled: false
+lokiCanary:
+  enabled: false
+test:
+  enabled: false

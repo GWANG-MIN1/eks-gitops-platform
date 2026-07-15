@@ -1,0 +1,36 @@
+# Child Application: Loki (log storage + query).
+#
+# releaseName is pinned to "loki" on purpose: the chart derives the Service name
+# from the release, and both promtail and the Grafana datasource address it as
+# `loki.observability.svc.cluster.local:3100`.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://grafana.github.io/helm-charts
+      chart: loki
+      # Held at 6.x: 7.0.0 is a fresh major and this cluster doesn't need to be
+      # the one that finds its bugs.
+      targetRevision: 6.55.0
+      helm:
+        releaseName: loki
+        valueFiles:
+          - $values/observability/loki/values.yaml
+    - repoURL: https://github.com/GWANG-MIN1/eks-gitops-platform.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
