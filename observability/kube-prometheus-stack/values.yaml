@@ -1,0 +1,135 @@
+# kube-prometheus-stack values — tuned for a small, throwaway EKS dev cluster.
+#
+# Two things drive almost every override here:
+#
+# 1. EKS reality. The control plane is AWS-managed and its components are not
+#    reachable from the cluster, so the default scrape targets for etcd, the
+#    scheduler and the controller-manager can never succeed. Left enabled they
+#    produce permanently-red targets and alerts that mean nothing — the classic
+#    "our monitoring is always on fire so we ignore it" failure. They're off.
+#
+# 2. Small and ephemeral. 2x t3.medium SPOT nodes, destroyed daily. Requests are
+#    modest and nothing is persisted to EBS.
+
+# --- Control-plane components: not scrapeable on EKS ---
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeEtcd:
+  enabled: false
+# EKS kube-proxy binds its metrics to 127.0.0.1, so the ServiceMonitor can't reach it.
+kubeProxy:
+  enabled: false
+
+defaultRules:
+  create: true
+  rules:
+    # Drop the rule groups that alert on the components disabled above —
+    # otherwise they fire forever on missing data.
+    etcd: false
+    kubeControllerManager: false
+    kubeSchedulerAlerting: false
+    kubeSchedulerRecording: false
+    kubeProxy: false
+    # Windows nodes: we don't have any.
+    windows: false
+
+prometheus:
+  prometheusSpec:
+    retention: 7d
+
+    # No storageSpec on purpose: the EBS CSI driver isn't installed and the
+    # cluster is torn down daily, so metrics live in the pod and die with it.
+    # If this ever needs to outlive a day, add the aws-ebs-csi-driver addon and
+    # a storageSpec here — that's a deliberate decision, not an oversight.
+
+    # Pick up ServiceMonitors/PodMonitors/Rules from anywhere, not just ones
+    # labelled with this Helm release (e.g. the ArgoCD monitors below).
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 400Mi
+      limits:
+        # Memory only — a CPU limit on a scraper just causes throttling and
+        # missed scrapes under load.
+        memory: 1Gi
+
+  # Watch the GitOps controller itself. If ArgoCD is unhealthy or an app has
+  # drifted, that's a platform problem — see alerts.yaml.
+  additionalServiceMonitors:
+    - name: argocd-application-controller
+      namespaceSelector:
+        matchNames:
+          - argocd
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-metrics
+      endpoints:
+        - port: metrics
+    - name: argocd-server
+      namespaceSelector:
+        matchNames:
+          - argocd
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-server-metrics
+      endpoints:
+        - port: metrics
+    - name: argocd-repo-server
+      namespaceSelector:
+        matchNames:
+          - argocd
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-repo-server
+      endpoints:
+        - port: metrics
+
+alertmanager:
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
+
+grafana:
+  enabled: true
+  # The kubernetes-mixin dashboards ship with the chart — that's the "baseline
+  # dashboards" box ticked without hand-maintaining dashboard JSON.
+  defaultDashboardsEnabled: true
+
+  # adminPassword is deliberately NOT set here. The chart default is fine for a
+  # port-forward-only dev stack, and a real password does not belong in Git —
+  # Phase 4 wires this to External Secrets.
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+  # Logs next to metrics: Loki shows up as a datasource in the same Grafana, so
+  # you can jump from a spiking graph to the pod's logs without leaving the tab.
+  # (Loki itself is deployed by gitops/apps/loki.yaml.)
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      access: proxy
+      url: http://loki.observability.svc.cluster.local:3100
+      isDefault: false
+
+prometheusOperator:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi

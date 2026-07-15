@@ -1,0 +1,38 @@
+# Child Application: kube-prometheus-stack (Prometheus + Grafana + Alertmanager).
+#
+# Multi-source: the chart comes from the upstream Helm repo (pinned), the values
+# come from this repo. That keeps a 6000-line chart out of Git while our overrides
+# stay reviewable in observability/kube-prometheus-stack/.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: 87.16.1
+      helm:
+        releaseName: kube-prometheus-stack
+        valueFiles:
+          - $values/observability/kube-prometheus-stack/values.yaml
+    - repoURL: https://github.com/GWANG-MIN1/eks-gitops-platform.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      # The Prometheus operator CRDs are enormous. A client-side apply stuffs them
+      # into the last-applied-configuration annotation and blows the 262144-byte
+      # limit; server-side apply is the supported way through.
+      - ServerSideApply=true
