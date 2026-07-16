@@ -1,0 +1,73 @@
+name: security-ci
+
+# Shift-left scanning: catch vulnerable images and misconfigured IaC in CI, before
+# anything reaches the cluster. Kyverno (see security/kyverno) is the runtime half
+# of the same idea.
+#
+# Gating is deliberately narrow so `main` stays green on signal, not noise:
+#   - image scan  -> FAILS on fixable CRITICAL CVEs (something you can act on today)
+#   - HIGH + IaC  -> reported, not gated (visible in the run log, no red main)
+# The weekly schedule re-scans the pinned image so newly-disclosed CVEs surface
+# even when nothing in the repo changed.
+
+on:
+  push:
+    paths:
+      - "gitops/apps/**"
+      - "terraform/**"
+      - "security/**"
+      - ".github/workflows/security-ci.yml"
+  pull_request:
+    paths:
+      - "gitops/apps/**"
+      - "terraform/**"
+      - "security/**"
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  image-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Keep in sync with gitops/apps/sample-app/deployment.yaml.
+      - name: Report HIGH + CRITICAL (informational)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: nginxinc/nginx-unprivileged:1.27-alpine
+          severity: HIGH,CRITICAL
+          format: table
+          exit-code: "0"
+
+      - name: Gate on fixable CRITICAL
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: nginxinc/nginx-unprivileged:1.27-alpine
+          severity: CRITICAL
+          ignore-unfixed: true
+          format: table
+          exit-code: "1"
+
+  iac-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Misconfig scan of the Terraform + Kubernetes manifests. Report-only for
+      # now — Kyverno enforces the equivalent runtime rules; this is here to make
+      # findings visible and can be flipped to a gate later.
+      - name: Trivy config/IaC scan (report-only)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          format: table
+          exit-code: "0"
