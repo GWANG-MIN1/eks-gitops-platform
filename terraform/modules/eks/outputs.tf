@@ -22,3 +22,8 @@ output "oidc_provider_arn" {
   description = "ARN of the IAM OIDC provider (for IRSA role trust policies)."
   value       = module.eks.oidc_provider_arn
 }
+
+output "oidc_provider" {
+  description = "OIDC issuer URL without the https:// scheme (for IRSA sub/aud conditions)."
+  value       = module.eks.oidc_provider
+}

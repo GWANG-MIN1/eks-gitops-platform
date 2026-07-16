@@ -25,6 +25,7 @@ group in private subnets, IRSA (OIDC) for pod-level IAM, and core add-ons.
 | `cluster_certificate_authority_data` | Base64 CA cert |
 | `cluster_security_group_id` | Control-plane security group |
 | `oidc_provider_arn` | IAM OIDC provider ARN (for IRSA) |
+| `oidc_provider` | OIDC issuer URL, no scheme (IRSA sub/aud conditions) |
 
 Built on [`terraform-aws-modules/eks/aws`](https://registry.terraform.io/modules/terraform-aws-modules/eks/aws) (pinned `~> 20.24`). Uses EKS access entries (API auth mode), so no Kubernetes provider or `aws-auth` ConfigMap is required. Node group defaults to **SPOT** capacity to keep the dev cluster cheap.
 

@@ -69,3 +69,9 @@ variable "node_max_size" {
   type        = number
   default     = 3
 }
+
+variable "enable_external_secrets_irsa" {
+  description = "Create the IRSA role that lets External Secrets read SSM (Phase 4)."
+  type        = bool
+  default     = true
+}
