@@ -12,10 +12,15 @@ Children:
 - `kube-prometheus-stack.yaml` — Prometheus, Grafana, Alertmanager + platform
   alerts (Phase 3) ✅
 - `loki.yaml` / `promtail.yaml` — log storage and collection (Phase 3) ✅
-- `security/` — Kyverno policies and related guardrails (Phase 4) ⬜
+- `kyverno.yaml` — policy engine; `kyverno-policies.yaml` → `../../security/kyverno/policies/`
+  (Phase 4) ✅
+- `external-secrets.yaml` — External Secrets Operator (Phase 4) ✅
 
-The Phase 3 Applications are multi-source: chart from the upstream Helm repo,
-values from `../../observability/` in this repo.
+The Helm-based Applications are multi-source: chart from the upstream Helm repo,
+values from `../../observability/` or `../../security/` in this repo.
+
+Sync ordering, where it matters, uses `argocd.argoproj.io/sync-wave`: Kyverno
+(wave 0) before its policies (wave 1); Loki before promtail.
 
 Each is added as its phase lands, so this directory stays in sync with what the
 cluster actually runs.

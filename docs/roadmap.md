@@ -48,14 +48,22 @@
 > 불가라 비활성화**(안 그러면 영구 red + 무의미한 알림), **PVC 없음**(EBS CSI 드라이버
 > 미설치 → PVC는 Pending에서 멈춤, 게다가 매일 destroy). 영속화는 별도 작업.
 
-## Phase 4 — DevSecOps ⬜
+## Phase 4 — DevSecOps ✅ (코드 완료 · 클러스터 검증 전)
 
 목표: 보안 가드레일이 나중에 덧붙이는 게 아니라 자동으로 돌아가게 한다.
 
-- [ ] CI에서 Trivy 이미지 스캔
-- [ ] Kyverno admission 정책 (`:latest` 금지, resource limit 필수 등)
-- [ ] kube-bench CIS 벤치마크 실행
-- [ ] 시크릿 관리 (External Secrets / SSM)
+- [x] CI에서 Trivy 이미지 스캔 — `.github/workflows/security-ci.yml` (fixable CRITICAL 게이트, HIGH·IaC report-only)
+- [x] Kyverno admission 정책 — `security/kyverno/policies/` (`:latest` 금지, resource 필수, non-root, privilege 제한). **Audit 모드**로 시작(→ 검증 후 Enforce)
+- [x] kube-bench CIS 벤치마크 실행 — `security/kube-bench/job-eks.yaml` (`make kube-bench`)
+- [x] 시크릿 관리 (External Secrets / SSM) — ESO(`gitops/apps/external-secrets.yaml`) + SSM read IRSA 역할(`terraform/environments/dev/external-secrets-irsa.tf`) + 예제
+
+> Kyverno/ESO는 GitOps로 배포. 차트 버전은 실제 차트를 받아 스키마·키 존재를 검증했고,
+> Kyverno 정책은 v1.18의 per-rule `validate.failureAction`(deprecated `spec.validationFailureAction` 아님)로 작성, terraform은 fmt/validate green. sample-app은 4개 정책 전부 통과하도록 설계됨.
+> 실제 클러스터에서 admission/스캔/secret sync 되는지는 Phase 1~3과 함께 검증한다.
+>
+> **의도적 결정**: 정책은 Audit로 시작(Enforce 즉시 적용은 신뢰를 잃는 방식) + 인프라
+> 네임스페이스 제외. Trivy 게이트는 fixable CRITICAL만(green main 유지). ESO의 SA↔IAM
+> 연결은 계정별이라 example+문서로 제공.
 
 ---
 

@@ -16,7 +16,9 @@ gitops/
     ├── kube-prometheus-stack.yaml # (Phase 3) metrics, dashboards, alerts ✅
     ├── loki.yaml                  # (Phase 3) log storage ✅
     ├── promtail.yaml              # (Phase 3) log collection ✅
-    └── security/                  # (Phase 4) kyverno policies, etc.
+    ├── kyverno.yaml               # (Phase 4) policy engine ✅
+    ├── kyverno-policies.yaml      # (Phase 4) admission policies ✅
+    └── external-secrets.yaml      # (Phase 4) secrets from AWS SSM ✅
 ```
 
 `root-app.yaml` is the only Application applied manually. It points ArgoCD at `apps/`

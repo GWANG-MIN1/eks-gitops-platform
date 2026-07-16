@@ -53,9 +53,9 @@ flowchart LR
 │   ├── bootstrap/      # ArgoCD 설치(pinned) + 전체를 관리하는 root Application
 │   └── apps/           # 워크로드별 Application (sample-app 등)
 ├── observability/      # Prometheus, Grafana, Loki 설정
-├── security/           # DevSecOps: 스캔, 정책, 벤치마크
+├── security/           # DevSecOps: Kyverno 정책, kube-bench, External Secrets
 ├── docs/               # 아키텍처 & 로드맵
-└── .github/workflows/  # CI: terraform fmt / validate / plan
+└── .github/workflows/  # CI: terraform fmt/validate + Trivy 스캔
 ```
 
 ## 로드맵
@@ -65,7 +65,7 @@ flowchart LR
 | 1 | Terraform 기반 구성 — VPC, EKS, remote state | ✅ 코드·CI 완료 (apply 검증 전) |
 | 2 | GitOps — ArgoCD bootstrap + 샘플 앱 | ✅ 코드 완료 (sync 검증 전) |
 | 3 | Observability — Prometheus, Grafana, Loki | ✅ 코드 완료 (검증 전) |
-| 4 | DevSecOps — Trivy, Kyverno, kube-bench | ⬜ 예정 |
+| 4 | DevSecOps — Trivy, Kyverno, kube-bench, External Secrets | ✅ 코드 완료 (검증 전) |
 
 전체 내용은 [docs/roadmap.md](docs/roadmap.md)에 있습니다.
 
