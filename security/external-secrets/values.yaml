@@ -1,0 +1,22 @@
+# External Secrets Operator values.
+#
+# The operator watches ExternalSecret resources and syncs values from an external
+# store (here: AWS SSM Parameter Store) into native Kubernetes Secrets — so the
+# secret lives in AWS, and only a *reference* to it lives in Git.
+
+installCRDs: true
+
+# The controller needs AWS credentials to read SSM. On EKS that's IRSA: annotate
+# its ServiceAccount with the role Terraform creates (SSM read-only, trusts this
+# SA — see terraform/environments/dev/external-secrets-irsa.tf and its
+# `external_secrets_irsa_role_arn` output).
+#
+# The ARN is account-specific, so it's applied here rather than committed:
+#
+#   helm/argocd values override, or:
+#   kubectl -n external-secrets annotate serviceaccount external-secrets \
+#     eks.amazonaws.com/role-arn=arn:aws:iam::<account-id>:role/eks-gitops-dev-external-secrets
+#
+# serviceAccount:
+#   annotations:
+#     eks.amazonaws.com/role-arn: arn:aws:iam::<account-id>:role/eks-gitops-dev-external-secrets
