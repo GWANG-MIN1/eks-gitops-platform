@@ -1,0 +1,51 @@
+# Drop privileges: no privilege escalation, not privileged, all capabilities dropped.
+#
+# The three together are most of the Pod Security "restricted" baseline for
+# capabilities — a container should start from zero and be given back only what it
+# demonstrably needs (this demo needs nothing).
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: restrict-privileges
+  annotations:
+    policies.kyverno.io/title: Restrict Privileges
+    policies.kyverno.io/category: Pod Security Standards (Restricted)
+    policies.kyverno.io/description: >-
+      Forbids privilege escalation and privileged containers, and requires all
+      Linux capabilities to be dropped.
+spec:
+  background: true
+  rules:
+    - name: drop-privileges
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kube-node-lease
+                - kube-public
+                - kyverno
+                - argocd
+                - observability
+                - external-secrets
+                - kube-bench
+      validate:
+        failureAction: Audit
+        message: >-
+          Containers must set allowPrivilegeEscalation=false, must not be
+          privileged, and must drop ALL capabilities.
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  allowPrivilegeEscalation: false
+                  # Conditional: if privileged is set at all, it must be false.
+                  =(privileged): false
+                  capabilities:
+                    drop:
+                      - ALL

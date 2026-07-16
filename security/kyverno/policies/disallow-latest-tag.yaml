@@ -1,0 +1,58 @@
+# No :latest (and no untagged) images.
+#
+# :latest is unpinnable — you can't tell what actually ran, and a re-pull can
+# silently change the workload. Every image must carry an explicit tag.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+  annotations:
+    policies.kyverno.io/title: Disallow Latest Tag
+    policies.kyverno.io/category: Supply Chain
+    policies.kyverno.io/description: >-
+      Requires an explicit image tag and forbids ':latest'.
+spec:
+  background: true
+  rules:
+    - name: require-image-tag
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces: &infra-namespaces
+                - kube-system
+                - kube-node-lease
+                - kube-public
+                - kyverno
+                - argocd
+                - observability
+                - external-secrets
+                - kube-bench
+      validate:
+        failureAction: Audit
+        message: "An explicit image tag is required (untagged images are not allowed)."
+        pattern:
+          spec:
+            containers:
+              - image: "*:*"
+    - name: disallow-latest-tag
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces: *infra-namespaces
+      validate:
+        failureAction: Audit
+        message: "Using the ':latest' tag is not allowed — pin an explicit version."
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"

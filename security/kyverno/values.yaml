@@ -1,0 +1,18 @@
+# Kyverno values — sized for a small dev cluster.
+#
+# The chart's HA defaults spread each controller across multiple replicas. On two
+# t3.medium nodes that's wasted scheduling pressure, so every controller runs a
+# single replica. This is explicitly NOT a production HA setup — for that, restore
+# the chart defaults (drop these overrides) and give it 3+ nodes.
+
+admissionController:
+  replicas: 1
+
+backgroundController:
+  replicas: 1
+
+cleanupController:
+  replicas: 1
+
+reportsController:
+  replicas: 1

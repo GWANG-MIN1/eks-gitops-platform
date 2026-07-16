@@ -1,0 +1,30 @@
+# Child Application: Kyverno policies.
+#
+# The ClusterPolicy resources in security/kyverno/policies/ are Kyverno custom
+# resources, so they need Kyverno's CRDs (installed by kyverno.yaml, sync-wave 0).
+# This app is sync-wave 1 and SkipDryRunOnMissingResource lets the first sync
+# proceed while the CRDs are still registering — ArgoCD converges on retry.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kyverno-policies
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/GWANG-MIN1/eks-gitops-platform.git
+    targetRevision: main
+    path: security/kyverno/policies
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kyverno
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - SkipDryRunOnMissingResource=true

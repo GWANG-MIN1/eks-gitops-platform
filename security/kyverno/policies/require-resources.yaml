@@ -1,0 +1,48 @@
+# Require resource requests + a memory limit on every container.
+#
+# Requests let the scheduler pack nodes sanely; a memory limit stops one leaking
+# pod from OOM-ing its neighbours. A CPU *limit* is deliberately NOT required —
+# capping CPU just throttles bursty workloads for no isolation benefit (same call
+# made for the observability stack in Phase 3).
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-resources
+  annotations:
+    policies.kyverno.io/title: Require Resource Requests and Memory Limit
+    policies.kyverno.io/category: Reliability
+    policies.kyverno.io/description: >-
+      Every container must set CPU/memory requests and a memory limit.
+spec:
+  background: true
+  rules:
+    - name: validate-resources
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kube-node-lease
+                - kube-public
+                - kyverno
+                - argocd
+                - observability
+                - external-secrets
+                - kube-bench
+      validate:
+        failureAction: Audit
+        message: "CPU and memory requests and a memory limit are required on every container."
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  requests:
+                    cpu: "?*"
+                    memory: "?*"
+                  limits:
+                    memory: "?*"
