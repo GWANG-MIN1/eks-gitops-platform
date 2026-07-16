@@ -1,7 +1,8 @@
 TF_DIR := terraform/environments/dev
 
 .PHONY: help fmt validate init plan apply destroy \
-	argocd-install argocd-root argocd-password argocd-ui
+	argocd-install argocd-root argocd-password argocd-ui \
+	kube-bench
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -40,3 +41,11 @@ argocd-password: ## Print the initial ArgoCD admin password
 
 argocd-ui: ## Port-forward the ArgoCD UI to https://localhost:8080
 	kubectl -n argocd port-forward svc/argocd-server 8080:443
+
+# ---- Security (Phase 4) ----
+
+kube-bench: ## Run the CIS benchmark and print the report
+	kubectl apply -f security/kube-bench/job-eks.yaml
+	kubectl -n kube-bench wait --for=condition=complete job/kube-bench --timeout=120s
+	kubectl -n kube-bench logs job/kube-bench
+	kubectl delete -f security/kube-bench/job-eks.yaml

@@ -1,0 +1,63 @@
+# kube-bench — CIS Kubernetes Benchmark (EKS profile).
+#
+# A run-on-demand diagnostic, NOT a GitOps-managed workload: it's a Job that runs
+# once and completes, so it lives here to `kubectl apply` when you want a report,
+# not under gitops/apps/ where ArgoCD would babysit a finished Job.
+#
+#   kubectl apply -f security/kube-bench/job-eks.yaml
+#   kubectl -n kube-bench wait --for=condition=complete job/kube-bench --timeout=120s
+#   kubectl -n kube-bench logs job/kube-bench
+#   kubectl delete -f security/kube-bench/job-eks.yaml   # to re-run
+#
+# It needs hostPID + host path mounts to inspect the node, which is exactly why
+# the kube-bench namespace is excluded from the Kyverno restricted policies.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kube-bench
+  labels:
+    app.kubernetes.io/part-of: eks-gitops-platform
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kube-bench
+  namespace: kube-bench
+spec:
+  template:
+    spec:
+      hostPID: true
+      containers:
+        - name: kube-bench
+          image: docker.io/aquasec/kube-bench:v0.15.6
+          command:
+            [
+              "kube-bench",
+              "run",
+              "--targets",
+              "node,policies,managedservices,controlplane",
+              "--benchmark",
+              "eks-1.5.0",
+            ]
+          volumeMounts:
+            - name: var-lib-kubelet
+              mountPath: /var/lib/kubelet
+              readOnly: true
+            - name: etc-systemd
+              mountPath: /etc/systemd
+              readOnly: true
+            - name: etc-kubernetes
+              mountPath: /etc/kubernetes
+              readOnly: true
+      restartPolicy: Never
+      volumes:
+        - name: var-lib-kubelet
+          hostPath:
+            path: "/var/lib/kubelet"
+        - name: etc-systemd
+          hostPath:
+            path: "/etc/systemd"
+        - name: etc-kubernetes
+          hostPath:
+            path: "/etc/kubernetes"
