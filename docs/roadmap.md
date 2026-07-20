@@ -14,10 +14,7 @@
 - [x] 서비스 계정용 IAM(IRSA) 기본 구성 — EKS OIDC provider
 - [x] CI에서 `terraform fmt` / `validate` 통과(green)
 
-> **2026-07-20 실계정 검증 완료**: bootstrap → `init -backend-config` → `apply` 전체
-> 플로우 성공. 노드 2개 Ready(v1.30.14-eks), coredns/aws-node/kube-proxy/
-> pod-identity-agent 전부 Running, 서브넷 4개가 2a/2c 두 AZ에 분산, remote state가
-> S3에 기록, IRSA용 OIDC provider 생성 확인. 매일 destroy 원칙은 계속 유지.
+> **2026-07-20 실계정 검증 완료** — 상세 기록: [verification/phase-1-terraform.md](verification/phase-1-terraform.md)
 
 ## Phase 2 — ArgoCD 기반 GitOps ✅ (라이브 sync 검증 완료)
 
@@ -28,21 +25,9 @@
 - [x] GitOps로 샘플 워크로드 배포 — `gitops/apps/sample-app`
 - [x] push → sync 흐름 문서화 — `gitops/README.md`
 
-> **2026-07-20 라이브 검증 완료**: bootstrap 2단계(install → root-app)만으로 자식 앱
-> 7개가 자동 생성되고, 최종적으로 **8개 Application 전부 Synced/Healthy** 도달
-> (Phase 3·4 스택 포함 — 전 파드 Running, sample-app은 port-forward로 접속 확인).
-> push→sync 루프는 실전으로 증명: Loki CrashLoop을 Git 수정 → push만으로 자동
-> 복구시킴 (`kubectl` 수동 조작 0회).
->
-> **검증 중 잡은 실전 이슈 3건** (전부 코드/Git으로 해결, 커밋 히스토리 참조):
-> 1. **t3.medium max-pods=17 한계** — 파드 34개로 2노드 만석 → hook job 2개가
->    `Too many pods`로 Pending. 노드 3대로 스케일해 해소. (desired_size는 모듈이
->    ignore_changes라 terraform이 아닌 `aws eks update-nodegroup-config`로 조정)
-> 2. **Loki 기동 실패** — persistence off 시 `/var/loki` 마운트가 없어 read-only
->    root FS에서 mkdir 실패(CrashLoopBackOff) → emptyDir 마운트 추가로 해결
-> 3. **영구 OutOfSync 2건** — k8s 1.30이 CRD `selectableFields`(1.31+ 기능)를
->    버리는 문제 + kyverno-api 차트의 빈 맵(`labels: {}`) 렌더링 → 라이브 diff로
->    원인 특정 후 `ignoreDifferences`로 해결
+> **2026-07-20 라이브 검증 완료** — 8/8 Application Synced/Healthy, push→sync
+> 왕복 실증. 상세 기록: [verification/phase-2-gitops.md](verification/phase-2-gitops.md) ·
+> 검증 중 잡은 이슈 3건: [troubleshooting/](troubleshooting/)
 
 ## Phase 3 — Observability ✅ (코드 완료 · 클러스터 검증 전)
 

@@ -47,7 +47,9 @@ flowchart LR
 │   └── apps/           # 워크로드별 Application (sample-app 등)
 ├── observability/      # Prometheus, Grafana, Loki 설정
 ├── security/           # DevSecOps: Kyverno 정책, kube-bench, External Secrets
-├── docs/               # 아키텍처 & 로드맵
+├── docs/               # 아키텍처 · 로드맵
+│   ├── verification/   #   └ 단계별 라이브 검증 기록
+│   └── troubleshooting/#   └ 검증 중 만난 문제와 해결 과정
 └── .github/workflows/  # CI: terraform fmt/validate + Trivy 스캔
 ```
 
