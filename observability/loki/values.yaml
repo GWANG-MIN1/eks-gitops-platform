@@ -43,6 +43,17 @@ singleBinary:
   persistence:
     enabled: false
 
+  # With persistence off, nothing gets mounted at /var/loki — and the container
+  # runs with a read-only root filesystem, so Loki dies at startup with
+  # "mkdir /var/loki: read-only file system" (verified on the live cluster).
+  # Give it a writable ephemeral volume at that path instead.
+  extraVolumes:
+    - name: loki-data
+      emptyDir: {}
+  extraVolumeMounts:
+    - name: loki-data
+      mountPath: /var/loki
+
   resources:
     requests:
       cpu: 50m
