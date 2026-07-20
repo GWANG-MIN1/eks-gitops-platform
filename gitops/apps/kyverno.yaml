@@ -28,15 +28,22 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: kyverno
-  # The chart's CRDs carry spec.versions[].selectableFields — a k8s 1.31+
-  # feature. Our 1.30 API server silently drops it, so live can never match Git
-  # and the app sits OutOfSync forever (verified on the live cluster). Ignore
-  # the field until the cluster is on 1.31+.
+  # Two verified-on-cluster sources of permanent CRD drift:
+  # 1. spec.versions[].selectableFields is a k8s 1.31+ feature; our 1.30 API
+  #    server silently drops it, so live can never match Git.
+  # 2. The kyverno-api subchart renders empty maps (labels: {} / annotations: {})
+  #    on its CRDs; the API server stores absent fields instead, which
+  #    server-side-apply diffing flags forever (chart sets no real values there,
+  #    so nothing is lost by ignoring).
+  # Drop both from diffing until the cluster is on 1.31+ / the chart fixes it.
   ignoreDifferences:
     - group: apiextensions.k8s.io
       kind: CustomResourceDefinition
       jqPathExpressions:
         - .spec.versions[].selectableFields
+      jsonPointers:
+        - /metadata/labels
+        - /metadata/annotations
   syncPolicy:
     automated:
       prune: true
