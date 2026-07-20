@@ -56,7 +56,7 @@ flowchart LR
 | 단계 | 내용 | 상태 |
 |------|------|------|
 | 1 | Terraform 기반 구성 — VPC, EKS, remote state | ✅ 검증 완료 (라이브 EKS apply) |
-| 2 | GitOps — ArgoCD bootstrap + 샘플 앱 | ✅ 코드 완료 (sync 검증 전) |
+| 2 | GitOps — ArgoCD bootstrap + 샘플 앱 | ✅ 검증 완료 (8/8 앱 Synced/Healthy) |
 | 3 | Observability — Prometheus, Grafana, Loki | ✅ 코드 완료 (검증 전) |
 | 4 | DevSecOps — Trivy, Kyverno, kube-bench, External Secrets | ✅ 코드 완료 (검증 전) |
 
