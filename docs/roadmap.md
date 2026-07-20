@@ -4,7 +4,7 @@
 동작하는 상태로 남깁니다. 체크박스는 작업이 실제로 반영될 때 갱신해서 상태를 항상
 정직하게 유지합니다.
 
-## Phase 1 — Terraform 기반 구성 ✅ (코드 완료 · apply 검증 전)
+## Phase 1 — Terraform 기반 구성 ✅ (라이브 apply 검증 완료)
 
 목표: `environments/dev`에서 `terraform apply` 하면 접근 가능한 EKS 클러스터가 뜬다.
 
@@ -14,9 +14,10 @@
 - [x] 서비스 계정용 IAM(IRSA) 기본 구성 — EKS OIDC provider
 - [x] CI에서 `terraform fmt` / `validate` 통과(green)
 
-> 코드와 CI(fmt/validate)는 완료. 실제 `apply`로 라이브 클러스터를 띄우는 검증은
-> 비용 때문에 필요할 때만 — 매일 destroy 원칙에 따라 계정에서 별도로 확인한다.
-> (체크박스는 "코드+검증(fmt/validate) 완료"를 뜻하며, apply-tested를 뜻하지 않는다.)
+> **2026-07-20 실계정 검증 완료**: bootstrap → `init -backend-config` → `apply` 전체
+> 플로우 성공. 노드 2개 Ready(v1.30.14-eks), coredns/aws-node/kube-proxy/
+> pod-identity-agent 전부 Running, 서브넷 4개가 2a/2c 두 AZ에 분산, remote state가
+> S3에 기록, IRSA용 OIDC provider 생성 확인. 매일 destroy 원칙은 계속 유지.
 
 ## Phase 2 — ArgoCD 기반 GitOps ✅ (코드 완료 · 클러스터 sync 검증 전)
 
