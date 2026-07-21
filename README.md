@@ -15,23 +15,7 @@ DevSecOps 가드레일까지 하나씩 붙여 나갑니다.
 
 ## 아키텍처 (목표)
 
-```mermaid
-flowchart LR
-    Dev[개발자] -->|git push| Repo[(Git 저장소)]
-    Repo -->|manifests / Helm| Argo[ArgoCD]
-
-    subgraph AWS
-        TF[Terraform] -->|프로비저닝| VPC
-        TF -->|프로비저닝| EKS[(EKS 클러스터)]
-        TF -->|프로비저닝| IAM
-
-        subgraph EKS
-            Argo -->|sync| Apps[워크로드]
-            Apps --> Obs[Prometheus / Grafana / Loki]
-            Sec[Trivy / Kyverno / kube-bench] -.검사.-> Apps
-        end
-    end
-```
+![아키텍처 다이어그램](docs/images/architecture.png)
 
 상세 설계와 그 결정 이유는 [docs/architecture.md](docs/architecture.md)에 정리했습니다.
 
