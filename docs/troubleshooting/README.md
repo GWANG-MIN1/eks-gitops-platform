@@ -8,5 +8,6 @@ Git 수정 → push → ArgoCD 자동 반영**으로 해결했다 (`kubectl edit
 | [01](01-max-pods-t3-medium.md) | Too many pods | t3.medium은 노드당 파드 17개가 상한 — CPU보다 IP 한도가 먼저 만석 |
 | [02](02-loki-read-only-filesystem.md) | Loki CrashLoop | persistence를 끄면 `/var/loki`에 아무도 볼륨을 안 꽂아준다 + read-only rootfs |
 | [03](03-crd-permanent-outofsync.md) | CRD 영구 OutOfSync | k8s 1.30이 1.31+ 필드(`selectableFields`)를 조용히 버려서 Git과 영원히 불일치 |
+| [04](04-app-of-apps-convergence-timing.md) | 배포 안 된 것 같은 착시 | root-app 직후 빈칸/OutOfSync/빈 네임스페이스는 장애가 아니라 정상 수렴 과정 — 멈춤과 구별하는 법 |
 
 작성 형식: 증상 → 진단 과정(명령·출력 포함) → 해결 → 교훈.
