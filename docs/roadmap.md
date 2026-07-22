@@ -29,7 +29,7 @@
 > 왕복 실증. 상세 기록: [verification/phase-2-gitops.md](verification/phase-2-gitops.md) ·
 > 검증 중 잡은 이슈 3건: [troubleshooting/](troubleshooting/)
 
-## Phase 3 — Observability ✅ (코드 완료 · 클러스터 검증 전)
+## Phase 3 — Observability ✅ (라이브 검증 완료)
 
 목표: 메트릭, 대시보드, 로그를 수동 설정 없이 바로 볼 수 있게 한다.
 
@@ -37,9 +37,11 @@
 - [x] 로그 집계용 Loki — `observability/loki/` (SingleBinary) + `observability/promtail/`, Grafana 데이터소스로 연결
 - [x] 기본 대시보드와 의미 있는 알림 몇 개 — 기본 대시보드는 차트 제공, 알림은 `observability/kube-prometheus-stack/alerts.yaml` (ArgoCD 드리프트/헬스, sample-app down)
 
-> 전부 GitOps로 배포된다 (`gitops/apps/`의 multi-source Application = 업스트림 차트 +
-> 이 레포의 values). 차트 values 스키마는 실제 차트를 받아 키 존재를 검증했고, YAML은
-> 전부 파싱 OK. 실제 클러스터에서 sync/scrape 되는지는 Phase 1·2와 함께 검증한다.
+> **2026-07-22 라이브 검증 완료** — Prometheus 타겟 up(+ArgoCD ServiceMonitor 3종),
+> `argocd_app_info` 8 series, Grafana mixin 대시보드 자동배포+실데이터, Loki에서
+> `{namespace="sample-app"}` 398줄 조회, 커스텀 알림 3종(platform.*) 로드 확인.
+> 상세: [verification/phase-3-observability.md](verification/phase-3-observability.md)
+> (알림 실제 Firing 검증은 다음 세션 과제). 수렴 타이밍 착시=[troubleshooting/04](troubleshooting/04-app-of-apps-convergence-timing.md).
 >
 > 의도적으로 정한 것: **EKS 컨트롤플레인(etcd/scheduler/controller-manager)은 스크레이프
 > 불가라 비활성화**(안 그러면 영구 red + 무의미한 알림), **PVC 없음**(EBS CSI 드라이버

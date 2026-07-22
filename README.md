@@ -43,7 +43,7 @@ DevSecOps 가드레일까지 하나씩 붙여 나갑니다.
 |------|------|------|
 | 1 | Terraform 기반 구성 — VPC, EKS, remote state | ✅ 검증 완료 (라이브 EKS apply) |
 | 2 | GitOps — ArgoCD bootstrap + 샘플 앱 | ✅ 검증 완료 (8/8 앱 Synced/Healthy) |
-| 3 | Observability — Prometheus, Grafana, Loki | ✅ 코드 완료 (검증 전) |
+| 3 | Observability — Prometheus, Grafana, Loki | ✅ 검증 완료 (메트릭·대시보드·로그·알림) |
 | 4 | DevSecOps — Trivy, Kyverno, kube-bench, External Secrets | ✅ 코드 완료 (검증 전) |
 
 전체 내용은 [docs/roadmap.md](docs/roadmap.md)에 있습니다.
