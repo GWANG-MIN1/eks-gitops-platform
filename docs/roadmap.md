@@ -47,7 +47,7 @@
 > 불가라 비활성화**(안 그러면 영구 red + 무의미한 알림), **PVC 없음**(EBS CSI 드라이버
 > 미설치 → PVC는 Pending에서 멈춤, 게다가 매일 destroy). 영속화는 별도 작업.
 
-## Phase 4 — DevSecOps ✅ (코드 완료 · 클러스터 검증 전)
+## Phase 4 — DevSecOps ✅ (라이브 검증 완료)
 
 목표: 보안 가드레일이 나중에 덧붙이는 게 아니라 자동으로 돌아가게 한다.
 
@@ -56,13 +56,17 @@
 - [x] kube-bench CIS 벤치마크 실행 — `security/kube-bench/job-eks.yaml` (`make kube-bench`)
 - [x] 시크릿 관리 (External Secrets / SSM) — ESO(`gitops/apps/external-secrets.yaml`) + SSM read IRSA 역할(`terraform/environments/dev/external-secrets-irsa.tf`) + 예제
 
-> Kyverno/ESO는 GitOps로 배포. 차트 버전은 실제 차트를 받아 스키마·키 존재를 검증했고,
-> Kyverno 정책은 v1.18의 per-rule `validate.failureAction`(deprecated `spec.validationFailureAction` 아님)로 작성, terraform은 fmt/validate green. sample-app은 4개 정책 전부 통과하도록 설계됨.
-> 실제 클러스터에서 admission/스캔/secret sync 되는지는 Phase 1~3과 함께 검증한다.
+> **2026-07-23 라이브 검증 완료** — Kyverno가 bad-pod(`:latest`, root, 리소스없음)에
+> FAIL 4건 기록(sample-app은 PASS 5/FAIL 0), kube-bench EKS 리포트 수령,
+> **IRSA 전체 체인 실측**(Terraform 역할 → SA 어노테이션 → ClusterSecretStore
+> `Valid` → SSM 값이 K8s Secret으로 `SecretSynced`), Trivy CI는 CVE 차단→수정→통과
+> 이력으로 증명. 상세: [verification/phase-4-devsecops.md](verification/phase-4-devsecops.md) ·
+> kubeconfig 함정 = [troubleshooting/05](troubleshooting/05-stale-kubeconfig-after-recreate.md)
 >
 > **의도적 결정**: 정책은 Audit로 시작(Enforce 즉시 적용은 신뢰를 잃는 방식) + 인프라
 > 네임스페이스 제외. Trivy 게이트는 fixable CRITICAL만(green main 유지). ESO의 SA↔IAM
-> 연결은 계정별이라 example+문서로 제공.
+> 연결은 계정별이라 example+문서로 제공. 후속: Audit→Enforce 전환, kube-bench FAIL
+> 1건 조치, Grafana를 grafana-admin Secret에 연결, SampleAppDown Firing 실증.
 
 ---
 
